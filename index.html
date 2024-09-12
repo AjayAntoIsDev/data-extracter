@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Protected HTML</title>
+        <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+        <style>
+            /* Ensure the iframe fills the entire browser window */
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+            }
+
+            iframe {
+                width: 100%;
+                height: 100vh;
+                /* 100% of the viewport height */
+                border: none;
+                display: none;
+                /* Initially hidden until decryption */
+            }
+        </style>
+    </head>
+
+    <body>
+        <!-- The iframe that will display the decrypted HTML -->
+        <iframe id="decryptedIframe"></iframe>
+
+        <script>
+            // Base64 encoded encrypted full HTML content (replace with your encoded string)
+            var base64Encoded = "VTJGc2RHVmtYMSt0THRUamtueVlJY0UvTUFPWXY3ZFlNVjAvOGlYUGFQeDFQRHRqOVNzcERFWUJnQ0RkN0E1ZEJVYld6VjlNV1ZHcW8vaUtEeU5pb0xVZmoxc3NnK3MyTmNOUmpXQ0FSSFM4S0h6OG53OWg0T1BuV2taUlVRMFNjaUlPZVYxdloxZUNGeG5oK1dZekt1WXBIWUhnSnB4V3Vzb09GZnRoU0o4RkU5WDRGUXFWTE5rRmhjdFNPa1lMTVN4enpva08yU1h6WjJ1WTBpTFBkVWY2WmdDeEdBZ2Jqa1dxVUZyK25hYzgzNERmNVZidFRaQitFemNxK251TTVQMFBuS0xQcW9Lclovb0M5K0Y0S2NaM2d4OGd2V2d3MEZhSjU4eFdKZHlSdDFYeDY1WU42MGtNY05FekM1QUVhSkJYUlJ4TTRqUkdGQXJIRGZXVWppVHRTQ3ZWckJydHRBTHdYNWdHZ3lqVmViQ2NoNXhHTTF2cnNHYWM1ekxCbTFmeTNGUnpNSGpDS0VaV2M0T2VINmhyODF2SFcwV3ZlTGJ4UFRBRXVDT3B2UlArSVBkTStUTFkvbkFQUDB5QmNFRm1nbWdEbjdUVWpjQUMyVE04NXJDYmJzbkdRY3BpVEF4VUlVbHZmK1NSQmYwYVc0L0lZNUdRZGxDb3E2aEZuYnhyVm5RZGtRemFCNlJjNE9ZcVJVWG8rck1mZUNNYU5KSGtPSjNJcXE2WG05VElWRE13cjRnUElSN0UvdzB2RVJBaHVORkwwdFJTY0RXYlh1cUJJWDh0djR3TkY1eHVRZFZWRXIwNmlGeTRMcXFvMTRWangydnZqYUMxcCtMRmN4N3dwSFd0czJhK0JJMmozUTNtbWt6dzQwdlZhdGh0QXJUcGluWTJucjk2RXBweXNiOE9XSVpnV3FQZ0pwQ3JNaU0rM3BzM2orU0FteEdyUytkZCtpK0VPZmtrNll5ei9ZRGxQMU9lRHI3VWI4TEF1ek01ajlyVVRFNVdSejNRaU55d2tYR0t2VG8zd3NydWwxdjJVVzhaWTYzRjJDbUxqZXhoWDFGU2Y1T0ROZXRMY3ZGZlBSbXEvUUs3TnJtZ2tGL2hza1ZHYXBJdjcxNjN5aGZXQWU2WVpaaWNnSVd4R0VGVTV4M0NRWURYalJaWCt3TlJBYWhTVjIrNDlIdkl6RFdkcFVBbkZpMXc5U1l6Vkl6WHdza1dobDlpWVFaRVkwTFd6Y2JhR21vWHFYM0JESWhmUFdkeStneFRSa1l1M3dXK0RweCtSeDJ2MG1IZm93bTQ4UmE1YWhFekUrY09neTNDajUwS0RSR1E3cmtqdSsxaU82Ym9telQrRE8zK0R6bGFhSUQ5NldEUFI1ZUZHZk5Fcm1HSWZPSGQ5UFpNUDdzSitnNUZOc3dUQW10eS9Wc1VtMDRiQW0yVENuN1hqa004SmZNSkRPSG82OUh5bk5rUG1Yc2haUmVVRVJuUVB3Z3gyZlkwZnFDdWk1cmxVaVlLUzF1TXk4SGtsczloYTBNMHY0Z2dobmxLYkRhc3ZFcSt4NHVJeHVreG1Wa0NZT0NQY3FBa0tLTGpIaWFhS1hLK25wRjI4b0t5TjVoWklvYStrK3FnNlJyU1hjbmg0eTBJNjI3SVJ1QTQ5dmE1ZVFsTllRS0YrcUtienJybUpXY3d0VW54bDgxUDROdEE4dWVrZGR0OG9Yc3BPN1NBVGgvZVk0VEp1ZlZpcnAybWt2L0tBL2xzVXFBYjRoRkFrazZKTUhuVy9yWGlQSERGSU5UZ1VpbDJIdHJoaGxydEJUekFhU0x0UXI0TUs3WU1xclJaZUJrSDFuM0x2WGtueFhVZWVFUWpSdGRUMlFMUkVvZDJUQ3VOcmRUdXdhakZWbUJkM3Zjd1VvSXl5em5yZ3I0TEdlVFlJMUxyTlNtc1kxYTJCWEk1VlcrMWZIWW5CSUluVjg0eTZ5OEY4QlRYSWtsYTMrU0Z6WkcrUVErWDY5bFM3NU9OLzFlVktaOU1ubFA3QW1teVpmZFAvZGM2SmYySEFZbHVoMU9JVXVNWTVkRVorTkUvWmhwQ002dTQxbkNFV3Z4bXNPK3V4VU83U2ZUK0pBc3F3NWovSjJqUERzNGpkRGdVWXRFSkprblNldGxianNZNkl4cjM2MGY1dXdiY3VmWUdXOStUdkJEZXhDYVN5MW4zajFqTG5qV1VES2QxN0djdCtCQktYUlU2a3dreFdJbzh2MTNQaFo5T0J0NXltekJZeHRUYmNSZW13R1FiR0p2K2tySmdSNm5nUXdFWkR6N0EzaWd3MDhZcXEzQkNheWZxOG51RjFEbHIwRkhYQ3J3MVljYlVSLzIwMnRGQWZZTFl0TzBlL25RUzNmVllnVFZnQ1kxanFoYitHdXJXYi9BaHAyajhuNWpSVndvejVYUkROdWdBOTVCTHA4Y3FQc0dxTW4rS1FvNm9iRUhrVEtiNEZhKzdNenEwQ3dDS2R5em5RRnFCeE15SkV1MkN1Mm9UVlJvU2FIOEQzMFBOQ1ZXbFV6b0FtL3IvenNhUUJYajJmWTlETjFjYU9laEVqVzhVRTUwSWVKWmdtaVZVN3BuZjRtTERHSHRaSXlCejJYR08zNUh3OVZvTTVVaG1MaTBocnFQY3pucjRabHBNVzMxUDg3UjZ6ajJEa3o1K0xUOTZ3aURPNmRqU2duYWRUdWJCeFJraVhYam5zYmJVV0Y0TVUxdTFweGNlRmkyN2Iva0VTSm4yaU12OTRCcUcrVVA5aFZRc1IwejdKQUljaHFHUFRqZTczV3IzT0RWTlpmdncrVytLRXNPKzh3bElHa20xSEVUSmFJNVVSVFRRWHRTei9OZ25KVTBybnVXbWdCSG9Kd1hxR1djeTh4SjV2czdsa1ZvQVJUU1RNb3ZySmFUYUc1dXdlMjJaZnh5YVZOZDc3c0hqYVEybkozSSt1ZlhMTXU5Q2xQUHJobGtCWmN4L28xdklmWFhxa1c2dmZQNDlucCtkRWpPQURGSTFKL3BSbUFIem5RUFpodHFhTGFoVjBaT2I5VmxkTTY3UzB6dldJOW9MNUYvOFVpQWtTd0JmREJ4S1VSd3FwSDZBdThsbS9KTTFTa3VJYzFMOFMwdjZOTHhhZTdTakdoM2REUGdsMm5MdUJqUmtqWE1SR1lOS0N6V0hSWG0wSUVJMXlFUW4xZlFyTEwrQnp0cVJZVDBGRXpncGRxYjg2cjNJRjk1em5OR2pKS3RjMG1SSVBYT1pMWDQzbnVDNXdRU0VJRS9Fd1crNVZNNktWcDVWV0g2dnZGd2N0eVB3c2FDSUVCVkNCejJUYklVZCtqaWplK3pzWTlSSVpvdG9XM2RVcVlQaDZrWjBrT09vMEZNK3JKaVZYNlRZSGNXaEl5akgzNzRyVm4vaFBsbGJUMDUvTkxobGhpem9pWHVMRTFrRjI5M0lOUTlaUXppNlZoVmdYa1lyUDNUVTVPejdPTGtxN0ZQTUFIR1g3TWFVcWVpb0t5emc0OUJjV3JUc3lUaUIyN2FNRFpOUVl1czBkN3hpejhIaVVVQ1ZQQW5ZT1VQb29HT2VmcmZEb2IrNk5VMVFrTXplZDB5OWJZYnZkeFd0YkFHdFpWSWtBem1hV2lSd1RuRythY2FKNC81UzhlUC81b25Gdmg4NDdYQ2pQaWVKVjF4S0QzbFBldUkxWGJRLzh1VXBOVC82UEVHTTBrL01WMDExclNEdSswcFE1ME00WHZEVldKTVFGdEc5TmE0Zk9qeVJTWmtTUzJZRDhud3hDMUpwcGlJMVpwZU54NEtNL282a1NFaDBhQU9Gb3p0MHpONTdIOHQwbndpc01kUWlNNG85Sjc3ZEFxemUvRG04RnFCeUs0ZEhVZlB3dzFNaG1ndXRtTWppalpRYnkrTy9veWRaRXVqc0NXU2treDJnSUw0YWh6dlJuUjA1SkZPR3NNTU1FVnVTK3ZreFVZcVhJdlNvcDZJYzQySlJZc2lQOTR3WVNEK2ZLME5YSTN0amdCbnNORVdJdXhzbFFPWWtGOVhOQk9ZK09IUlpjNU5tSHZmSXd5VzBJRDR2TW1EQVZKOHUvOTZZSzlWWWxMWTJXQ0RTY1dYanpRbDVvcGI5M3VTazIvcUpnVkV1eTloZW1DdVFwU3cxUEV5bFdHazg4cndvS05qVWhyTHpaRWJ1eGhuejNxc0R1UzJLSVhjcDA0NzllSERCanY2V1JrWEkyZGc3WGhGNzQyTWg1Ly9OeEw5MHdYYy9zNUVLLy9YYVI3SzlqVHVoVWpDUWhnOXdzWjM0M0JTSThkMUsrYWNKMkh4aG5pK3lYdkNKVUhKVFFVWjVGRWhKYUo2WEtrQjBSOWxFcHJ4M0cyTFU1ZlJHR04zbGh4ZEJ2YXU2NHlMVm5VZTMwWGNJV1FDa2pwR2o0dkxpMXVmdk1WL3l3bFJpdUdvT0lLc2RSVXRaeVFqQmZFZUtkelV1US9oUEZ3WG9wRUl5NjFEK1k4VlVhc3Q3ZDVZbm93ZGZ0TGg1Tkk5MVpSaVV2K0V2WHI5cDQyZkkwa2g2YVJJdkpMcHE3T0R1ejRMRzY3cVNMdENlME0zelc5WUdYci95d0lNT0F0OWljbktZK3lReVh2SGFhS0lvS3lUN2Jxdkw0ejA2eW00N1VBMTJQamdvZHpudFV1cWRNUk5XYXpVU0Nybk9lS2hBVEgwU0d4VFgwVzBVZ0xKU3lBYkJRYlI3UGFTTFpIdHBJeHRzOUVpQ3UvR3NXNnVSeGVza0x2R08zQzkvcTdpMzVOVHh0eXQrL0QxandHa2RXbTNRUUNRMUNYbFJqWHBJZm52WkdrNnBZdkI2L2VqeWNieCthbjJqREltblhSRHFNaW9YWlVDZ0ZEZDlGRGxXcjNoMjhGTVhOTkFhdWo3N1dSU2laWHdjZHBRME9jLzJYN3NDUDFHUVJINHV5aXBpdndVMm9zNE1vZ1BjRkVNeTNkWEFwSmxGTkRyZTNHQjh5aFJSaDVZcXNmVUZyZFNBU3VFL3BybndpQ0l1U2g2dVJ3OU5Ka3lMeGFHT1VYdWtTUFBaY2hRTFk1b2Q4MUNoclN2NkNLV1FQRzRFWEpKMEtTSFhHcDIvVFRtOHRUTEc2T1ZzSVhIZG55Y252anNocHMwR204QjlQdFppZ3IzNUowODlPNWpsRm9qRU9ueFJBRkZjZDE2djlGOVVmZDg5dnNjZzkvQ1ZCVGlPcGorOG5iV1RjVjRHY01KV2llUDJMSlp2T2tmeUo1bG9FZU9XSkh6aHJhek5oMW82cy9OdWdhbjZhdEUvbEdoMTdBZmVrQlV2UkVZa3JMdndXWjRIK2xUTTVhOFRuRG1VK2JsWlJpakpkeDdMc0x3YnJLMVltSFp2eTRtMU8wb1hObnhLZlJ5MGNzTUJYdklldlVIRnZVZ3JqNUVFaXN1US9tcmV4amk3aHlZeURiU0d1L0FjYmI0M1V6ZlR0OXZLVHRSdG1tckdBVC96d3g2VW9CUVdUbDMyVEJHbndUNDFEUVNuMUpPQVJ4R0p0N3o1ZVZQNm1ONFAwSWMrQU1PRkI1M2RaSTdrUDBlSVVlWFArSE9yV3RCR1VFaTZ1ZjRIUUFKV1llcHdIck9nSHg4Q1oxbDVuSVhpWXcraTYwdkE4azJDMVpDc3NCZHF1TEYyWWI5VExobzRRWGZUZWJIbA==";
+
+            // Ask for the password using a popup
+            function askForPassword() {
+                var password = prompt("Enter the password");
+
+                // If a password is entered, attempt decryption
+                if (password !== null) {
+                    decryptHTML(password);
+                }
+            }
+
+            function decryptHTML(password) {
+                try {
+                    // Base64 decode the encrypted content
+                    var encryptedContent = atob(base64Encoded);
+
+                    // Decrypt the Base64 decoded content
+                    var decryptedBytes = CryptoJS.AES.decrypt(encryptedContent, password);
+                    var decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+                    if (decryptedText) {
+                        // Inject decrypted HTML into iframe
+                        var iframe = document.getElementById('decryptedIframe');
+                        iframe.style.display = 'block'; // Make iframe visible
+                        iframe.srcdoc = decryptedText;  // Inject the decrypted HTML into iframe
+                    } else {
+                        alert("Incorrect password. Please try again.");
+                        askForPassword(); // Re-prompt for password
+                    }
+                } catch (error) {
+                    alert("Decryption failed. Incorrect password or corrupted content.");
+                    askForPassword(); // Re-prompt for password
+                }
+            }
+
+            // Automatically ask for the password on page load
+            window.onload = function () {
+                askForPassword();
+            };
+        </script>
+    </body>
+
+</html>
